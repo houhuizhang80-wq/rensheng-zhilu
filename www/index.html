@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name="description" content="人生之路" />
+    <meta name="keywords" content="" />
+    <meta itemprop="image" content="https://miaoda-edit-image.cdn.bcebos.com/du8r0a7ctszl/IMG-dw2eda16s7pc.png" />
+    <meta property="og:title" content="人生之路" />
+    <meta property="og:description" content="人生之路" />
+    <meta property="og:image" content="https://miaoda-edit-image.cdn.bcebos.com/du8r0a7ctszl/IMG-dw2eda16s7pc.png" />
+    <meta property="og:url" content="https://app-du8r0a7ctszl.appmiaoda.com" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="人生之路" />
+    <meta property="og:locale" content="zh_CN" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="人生之路" />
+    <meta name="twitter:description" content="人生之路" />
+    <meta name="twitter:image" content="https://miaoda-edit-image.cdn.bcebos.com/du8r0a7ctszl/IMG-dw2eda16s7pc.png" />
+    <meta name="twitter:url" content="https://app-du8r0a7ctszl.appmiaoda.com" />
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>人生之路</title>
+    <style id="expo-reset">
+      html, body { height: 100%; }
+      body { overflow: hidden; }
+      #root { display: flex; height: 100%; flex: 1; }
+    </style>
+  <link rel="preload" href="web.css" as="style"><link rel="stylesheet" href="web.css"><link rel="icon" href="https://miaoda-edit-image.cdn.bcebos.com/du8r0a7ctszl/IMG-dw2eda16s7pc.png" /></head>
+
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+
+  <script src="local-backend.js"></script>
+  <script src="local-handlers.js"></script>
+
+<script>
+(function(){
+  // 预置有效离线会话：确保 sb-backend-auth-token 存在，
+  // 使游戏认为已登录，直接进入 (app) 主流程而非 Unmatched/日历页。
+  var TOKEN_KEY = 'sb-backend-auth-token';
+  function b64url(obj){
+    return btoa(JSON.stringify(obj)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  }
+  function makeAccessToken(){
+    var now = Math.floor(Date.now()/1000);
+    var header = b64url({alg:'HS256',typ:'JWT'});
+    var payload = b64url({aud:'authenticated',exp:now+315360000,iat:now,iss:'supabase',role:'authenticated',sub:'offline-local-player-00000001'});
+    return header + '.' + payload + '.offlinesignature';
+  }
+  function fakeUser(){
+    var iso = new Date().toISOString();
+    return {
+      id:'offline-local-player-00000001', aud:'authenticated', role:'authenticated',
+      email:'offline@local.game', email_confirmed_at:iso, phone:'', confirmed_at:iso,
+      last_sign_in_at:iso, app_metadata:{provider:'email',providers:['email']},
+      user_metadata:{},
+      identities:[{id:'offline-local-player-00000001',user_id:'offline-local-player-00000001',identity_data:{sub:'offline-local-player-00000001'},provider:'email',last_sign_in_at:iso,created_at:iso}],
+      created_at:iso, updated_at:iso
+    };
+  }
+  function makeSession(){
+    return {
+      access_token: makeAccessToken(), token_type:'bearer', expires_in:3600,
+      expires_at: Math.floor(Date.now()/1000)+3600,
+      refresh_token: 'offline-refresh-'+Date.now(), user: fakeUser()
+    };
+  }
+  try {
+    if(!localStorage.getItem(TOKEN_KEY)){
+      localStorage.setItem(TOKEN_KEY, JSON.stringify(makeSession()));
+    }
+  } catch(e){}
+})();
+</script>
+
+  <script src="entry.js" defer></script>
+
+<script>
+(function(){
+  // 引导：游戏初始 file:// URL 无法匹配 Expo Router 路由 → Unmatched。
+  // 检测到 Unmatched 后，强制导航到创建角色页（配合注入的 session 可正常进入）。
+  var done = false;
+  function goCreate(){
+    if (done) return;
+    done = true;
+    try {
+      window.history.pushState(null, '', '/character-create');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+      console.log('[NAV] pushed /character-create');
+    } catch(e){ console.log('[NAV] err ' + e); }
+  }
+  function check(){
+    try {
+      if (document.body && document.body.innerHTML.indexOf('Unmatched') >= 0) {
+        goCreate();
+      }
+    } catch(e){}
+  }
+  setTimeout(check, 3000);
+  setTimeout(check, 5000);
+  setTimeout(check, 8000);
+  setTimeout(check, 12000);
+})();
+</script>
+
+<script>
+(function(){
+  // ====== 1. 隐藏底部「最新频道」和「赞助支持作者」 ======
+  var T1='最新频道', T2='赞助支持作者';
+  function hideLinks(){
+    var all=document.querySelectorAll('*');
+    for(var i=0;i<all.length;i++){
+      var el=all[i];
+      var txt=(el.textContent||'').trim();
+      if(txt===T1 || txt===T2){
+        var p=el;
+        for(var d=0;d<5&&p;d++){
+          if(p.onclick||p.tagName==='A'||p.getAttribute('role')==='button'){
+            p.style.display='none'; break;
+          }
+          p=p.parentElement;
+        }
+        if(el.style.display!=='none') el.style.display='none';
+      }
+    }
+  }
+  hideLinks();
+  new MutationObserver(hideLinks).observe(
+    document.body||document.documentElement,
+    {childList:true,subtree:true,characterData:true}
+  );
+})();
+</script>
+</body>
+</html>
